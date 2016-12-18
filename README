@@ -1,13 +1,19 @@
-Is is a QR inventory system. THere are three folders
+This project, as well as everything inside, is part of a prototype inventory system for the International School of Düsseldorf Sound and Lights Team. 
+This system will be using QR codes for easy identification of the items and will have three main parts to it. These are the Desktop Client, Mobile client as well as the serverside client. 
 
-Desktop: The desktop client
+Desktop Client:
+The Desktop Client will be used to manage the inventory, easily see which items are where as well as add new items into the system.  
 
-Server: The server
+Mobile Client:
+The Mobile Client will be used to check in and check out items by scanning the QR codes along with a QR code in the specified area. 
+
+Server Client:
+The Server Client will be in charge of syncing everyhting together and making sure that all clients are up to date. 
 
 Contributers:
 
 Designers:
-Jan Herbst
+Jan Herbst & Maximilian am Brunnen
 
 Programmers:
-il8677
+il8677 & theo_c
