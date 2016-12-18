@@ -10,10 +10,8 @@ The Mobile Client will be used to check in and check out items by scanning the Q
 Server Client:
 The Server Client will be in charge of syncing everyhting together and making sure that all clients are up to date. 
 
-Contributers:
-
 Designers:
-Jan Herbst & Maximilian am Brunnen
+Maximilian am Brunnen // Jan Herbst
 
-Programmers:
-il8677 & theo_c
+Developers:
+il8677 // theo_c
