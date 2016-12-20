@@ -51,7 +51,6 @@ def load():
             items.append(Item(values[0],values[1]))
             items[var.itemCount-1].locationid=values[2]
     for item in items:
-        var.itemCount+=1
         valid=False
         trycount=0
         addtext=""
