@@ -36,12 +36,20 @@ def save():
     itemfile=open("items.csv", "w")
     for item in items:
         itemfile.write(item.name+",")
-        itemfile.write(item.id+",")
-        itemfile.write(item.locationid+"\n")
+        itemfile.write(str(item.id)+",")
+        itemfile.write(str(item.locationid)+"\n")
     itemfile.close()
-def saveButtonEvent(event):
+def savebind(event):
     save()
 def load():
+    itemfile=open("items.csv", "r")
+    rows=itemfile.read().split("\n")
+    itemfile.close()
+    for row in rows:
+        values=row.split(",")
+        if not values==['']:
+            items.append(Item(values[0],values[1]))
+            items[var.itemCount-1].locationid=values[2]
     for item in items:
         var.itemCount+=1
         valid=False
@@ -60,9 +68,6 @@ def newItem(event):
     items.append(Item("New Item", next_free_id))
     itemlist.insert("", var.itemCount, text=items[var.itemCount-1].name,values=(items[var.itemCount-1].id))
     var.itemCount+=1
-items.append(Item("Ubar12", 0))
-items.append(Item("Ubar12", 1))
-items.append(Item("Ubar12", 2))
 #Begin UI Initialisation
 #Itemlist
 itemlist=Treeview(root)
@@ -73,14 +78,14 @@ itemlist.heading("1",text="id")
 itemlist.grid(row=2,column=1,padx=10,pady=10)
 #Name tag
 Label(root,text="Name:").grid(row=3,column=0)
+#Save Button
+saveButton=Button(text="Save")
+saveButton.bind("<Button-1>",savebind)
+saveButton.grid(row=1,column=0)
 #Add New button
-newItemButton=Button(root,text="New Event")
+newItemButton=Button(text="New Event")
 newItemButton.bind("<Button-1>",newItem)
 newItemButton.grid(row=0,column=1)
-#Save Button
-saveButton=Button(root,text="Save")
-saveButton.bind(("<Button-1>", saveButtonEvent))
-saveButton.grid(row=1,column=0)
 #Name Entry
 itemNameEntry=Entry(root,width=25)
 itemNameEntry.grid(row=3,column=1)
