@@ -67,6 +67,22 @@ def newItem(event):
     items.append(Item("New Item", next_free_id))
     itemlist.insert("", var.itemCount, text=items[var.itemCount-1].name,values=(items[var.itemCount-1].id))
     var.itemCount+=1
+def getItemIndexByName(name):
+    ga=0
+    for item in items:
+        if(item.name==name):
+            return ga
+        else:
+            ga+=1
+def select(event):
+    print("Selected Menu Item")
+    selected = itemlist.item(itemlist.selection()[0])["text"]
+    theItem = items[getItemIndexByName(selected)]
+    itemNameEntry.delete(0,"end")
+    itemNameEntry.insert(0,theItem.name)
+
+
+
 #Begin UI Initialisation
 #Itemlist
 itemlist=Treeview(root)
@@ -74,6 +90,7 @@ itemlist.heading("#0", text="Name")
 itemlist["columns"]=("1")
 itemlist.column("1",width=50)
 itemlist.heading("1",text="id")
+itemlist.bind("<Double-1>", select)
 itemlist.grid(row=2,column=1,padx=10,pady=10)
 #Name tag
 Label(root,text="Name:").grid(row=3,column=0)
