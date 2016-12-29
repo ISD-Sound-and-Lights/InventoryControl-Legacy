@@ -7,7 +7,7 @@ The Desktop Client will be used to manage the inventory, easily see which items 
 Mobile Client:
 The Mobile Client will be used to check in and check out items by scanning the QR codes along with a QR code in the specified area. 
 
-Server Client:
+Server:
 The Server Client will be in charge of syncing everyhting together and making sure that all clients are up to date. 
 
 Designers:
