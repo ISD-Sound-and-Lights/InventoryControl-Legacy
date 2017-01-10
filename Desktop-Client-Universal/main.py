@@ -80,7 +80,8 @@ def select(event):
     theItem = items[getItemIndexByName(selected)]
     itemNameEntry.delete(0,"end")
     itemNameEntry.insert(0,theItem.name)
-
+def submit(event):
+    items[getItemIndexByName(itemlist.item(itemlist.selection()[0])["text"])].name = itemNameEntry.
 
 
 #Begin UI Initialisation
@@ -105,6 +106,10 @@ newItemButton.grid(row=0,column=1)
 #Name Entry
 itemNameEntry=Entry(root,width=25)
 itemNameEntry.grid(row=3,column=1)
+#Submit Button
+submitButton=Button(root,width=25,text="Submit")
+submitButton.grid(row=4,column=1)
+submitButton.bind("<Button-1>",submit)
 #Begin loading
 load()
 #Starting UI
