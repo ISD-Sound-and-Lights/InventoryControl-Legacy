@@ -105,7 +105,6 @@ newItemButton.grid(row=0,column=1)
 #Name Entry
 itemNameEntry=Entry(root,width=25)
 itemNameEntry.grid(row=3,column=1)
-
 #Begin loading
 load()
 #Starting UI
