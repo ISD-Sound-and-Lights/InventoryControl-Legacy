@@ -1,9 +1,11 @@
 from tkinter import *
 from tkinter.ttk import *
 
-next_free_id = 0
+
+
 class globalvars:
     itemCount=1
+    next_free_id = 0
 var=globalvars()
 
 class Location:
@@ -56,6 +58,7 @@ def load():
         addtext=""
         while not valid:
             try:
+                globalvars.next_free_id+=1
                 itemlist.insert("", var.itemCount, text=item.name + addtext,values=(item.id))
             except TclError:
                 trycount+=1
@@ -68,9 +71,11 @@ def updateItemList():
     for item in items:
         itemlist.insert("", var.itemCount,text=item.name ,values=(item.id))
 def newItem(event):
-    items.append(Item("New Item", next_free_id))
+    items.append(Item("New Item", globalvars.next_free_id))
     itemlist.insert("", var.itemCount, text=items[var.itemCount-1].name,values=(items[var.itemCount-1].id))
     var.itemCount+=1
+    globalvars.next_free_id+=1
+
 
 def getItemIndexById(identification):
     ga = 0
