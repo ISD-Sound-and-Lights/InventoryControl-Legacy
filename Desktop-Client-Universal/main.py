@@ -48,7 +48,7 @@ def load():
     for row in rows:
         values=row.split(",")
         if not values==['']:
-            items.append(Item(values[0],values[1]))
+            items.append(Item(values[0],int(values[1])))
             items[var.itemCount-1].locationid=values[2]
     for item in items:
         valid=False
@@ -63,10 +63,22 @@ def load():
             else:
                 var.itemCount+=1
                 valid=True
+def updateItemList():
+    itemlist.delete(*itemlist.get_children())
+    for item in items:
+        itemlist.insert("", var.itemCount,text=item.name ,values=(item.id))
 def newItem(event):
     items.append(Item("New Item", next_free_id))
     itemlist.insert("", var.itemCount, text=items[var.itemCount-1].name,values=(items[var.itemCount-1].id))
     var.itemCount+=1
+
+def getItemIndexById(identification):
+    ga = 0
+    for item in items:
+        if item.id == identification:
+            return ga
+        else:
+            ga += 1
 def getItemIndexByName(name):
     ga=0
     for item in items:
@@ -76,12 +88,18 @@ def getItemIndexByName(name):
             ga+=1
 def select(event):
     print("Selected Menu Item")
+    print(itemlist.item(itemlist.selection()))
     selected = itemlist.item(itemlist.selection()[0])["text"]
     theItem = items[getItemIndexByName(selected)]
     itemNameEntry.delete(0,"end")
     itemNameEntry.insert(0,theItem.name)
 def submit(event):
-    items[getItemIndexByName(itemlist.item(itemlist.selection()[0])["text"])].name = itemNameEntry.
+    itemArray=itemlist.item(itemlist.selection())
+    valueArray=itemArray["values"]
+    identifier=valueArray[0]
+    index=getItemIndexById(identifier)
+    items[index].name = itemNameEntry.get()
+    updateItemList()
 
 
 #Begin UI Initialisation
