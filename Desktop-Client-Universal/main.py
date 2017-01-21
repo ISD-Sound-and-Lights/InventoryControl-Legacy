@@ -6,6 +6,7 @@ from tkinter.ttk import *
 class globalvars:
     itemCount=1
     next_free_id = 0
+    selected_id=0
 var=globalvars()
 
 class Location:
@@ -93,18 +94,14 @@ def getItemIndexByName(name):
             ga+=1
 def select(event):
     print("Selected Menu Item")
-    print(itemlist.item(itemlist.selection()))
     selected = itemlist.item(itemlist.selection()[0])["text"]
     theItem = items[getItemIndexByName(selected)]
     itemNameEntry.delete(0,"end")
     itemNameEntry.insert(0,theItem.name)
+    var.selected_id=theItem.id
 def submit(event):
-    selection=itemlist.selection()[0]
-    itemArray=itemlist.item(selection)
-    valueArray=itemArray["values"]
-    identifier=valueArray[0]
-    index=getItemIndexById(identifier)
-    items[index].name = itemNameEntry.get()
+    print(itemlist.item(itemlist.selection()))
+    items[getItemIndexById(var.selected_id)].name = itemNameEntry.get()
     updateItemList()
 
 
