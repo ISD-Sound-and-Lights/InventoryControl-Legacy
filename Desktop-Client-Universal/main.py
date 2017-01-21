@@ -99,7 +99,8 @@ def select(event):
     itemNameEntry.delete(0,"end")
     itemNameEntry.insert(0,theItem.name)
 def submit(event):
-    itemArray=itemlist.item(itemlist.selection())
+    selection=itemlist.selection()[0]
+    itemArray=itemlist.item(selection)
     valueArray=itemArray["values"]
     identifier=valueArray[0]
     index=getItemIndexById(identifier)
