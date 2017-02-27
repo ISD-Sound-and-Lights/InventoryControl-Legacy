@@ -16,5 +16,5 @@ This system uses QR codes for easy identification of the items and has three mai
 
 **Developers:**
 * il8677
-* theo_c
+* DyingEcho
 * Maximilian am Brunnen
