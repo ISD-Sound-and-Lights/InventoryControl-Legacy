@@ -108,7 +108,7 @@ def submit(event):
 #Begin UI Initialisation
 #Itemlist
 itemlist=Treeview(root)
-itemlist.heading("#0", text="Name")
+itemlist.heading("#0", text="Item Name")
 itemlist["columns"]=("1")
 itemlist.column("1",width=50)
 itemlist.heading("1",text="Item ID")
