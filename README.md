@@ -11,10 +11,10 @@ This system uses QR codes for easy identification of the items and has three mai
 * **Server:** In charge of syncing everyhting together and making sure that all clients are up to date.
 
 **Designers:**
-* Maximilian am Brunnen
-* Jan Herbst
+* [Maximilian am Brunnen] (https://github.com/MaxiaB)
+* [Jan Herbst] (https://github.com/janherbst)
 
 **Developers:**
-* il8677
-* DyingEcho
-* Maximilian am Brunnen
+* [il8677] (https://github.com/il8677)
+* [DyingEcho] (https://github.com/DyingEcho)
+* [Maximilian am Brunnen] (https://github.com/MaxiaB)
