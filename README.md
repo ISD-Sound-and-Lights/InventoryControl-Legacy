@@ -7,6 +7,8 @@ This system uses QR codes for easy identification of the items and has three mai
 * **Desktop Client:** Used to manage the inventory, easily see which items are where as well as add new items into the system.
 
 * **Mobile Client:** Used to check in and check out items by scanning the QR codes along with a QR code in the specified area.
+	* **iOS client:** Written in Swift. Designed for iPhone.
+	* **Android client:** Designed for Android phones.
 
 * **Server:** In charge of syncing everyhting together and making sure that all clients are up to date.
 
