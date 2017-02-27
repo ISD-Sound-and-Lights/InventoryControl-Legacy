@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 from tkinter import *
 from tkinter.ttk import *
 
 
-
+# Define classes
 class globalvars:
 	itemCount=1
 	next_free_id = 0
@@ -13,6 +14,7 @@ class Location:
 	def __init__(self, name, id):
 		self.name = name
 		self.id = id
+
 class Item:
 	locationid = -1
 	def __init__(self, name, id):
@@ -21,7 +23,9 @@ class Item:
 
 items = []
 locations = []
-#Load Settings
+
+
+# Load Settings
 settings = open("settings", "r")
 paramaters=settings.read().split("\n")
 settings.close()
@@ -29,11 +33,16 @@ settings.close()
 HOST=paramaters[0]
 PORT=paramaters[1]
 
+
+# Setup tkinter
 root=Tk()
 root.title("Sound and Lights Inventory System")
 root.minsize(width=700, height=420)
 
 frame = Frame(root)
+
+
+# Define functions
 def save():
 	print("Saving")
 	itemfile=open("items.csv", "w")
@@ -42,8 +51,10 @@ def save():
 		itemfile.write(str(item.id)+",")
 		itemfile.write(str(item.locationid)+"\n")
 	itemfile.close()
+
 def savebind(event):
 	save()
+
 def load():
 	itemfile=open("items.csv", "r")
 	rows=itemfile.read().split("\n")
@@ -67,16 +78,17 @@ def load():
 			else:
 				var.itemCount+=1
 				valid=True
+
 def updateItemList():
 	itemlist.delete(*itemlist.get_children())
 	for item in items:
 		itemlist.insert("", var.itemCount,text=item.name ,values=(item.id))
+
 def newItem(event):
 	items.append(Item("New Item", globalvars.next_free_id))
 	itemlist.insert("", var.itemCount, text=items[var.itemCount-1].name,values=(items[var.itemCount-1].id))
 	var.itemCount+=1
 	globalvars.next_free_id+=1
-
 
 def getItemIndexById(identification):
 	ga = 0
@@ -85,6 +97,7 @@ def getItemIndexById(identification):
 			return ga
 		else:
 			ga += 1
+
 def getItemIndexByName(name):
 	ga=0
 	for item in items:
@@ -92,6 +105,7 @@ def getItemIndexByName(name):
 			return ga
 		else:
 			ga+=1
+
 def select(event):
 	print("Selected Menu Item")
 	selected = itemlist.item(itemlist.selection()[0])["text"]
@@ -99,14 +113,15 @@ def select(event):
 	itemNameEntry.delete(0,"end")
 	itemNameEntry.insert(0,theItem.name)
 	var.selected_id=theItem.id
+
 def submit(event):
 	print(itemlist.item(itemlist.selection()))
 	items[getItemIndexById(var.selected_id)].name = itemNameEntry.get()
 	updateItemList()
 
 
-#Begin UI Initialisation
-#Itemlist
+# Initialise GUI
+# Item list
 itemlist=Treeview(root)
 itemlist.heading("#0", text="Item Name")
 itemlist["columns"]=("1")
@@ -114,24 +129,31 @@ itemlist.column("1",width=50)
 itemlist.heading("1",text="Item ID")
 itemlist.bind("<Double-1>", select)
 itemlist.grid(row=2,column=1,padx=10,pady=10)
-#Name tag
+
+# Nametag
 Label(root,text="Name:").grid(row=3,column=0)
-#Save Button
+
+# 'Save' Button
 saveButton=Button(text="Save")
 saveButton.bind("<Button-1>",savebind)
 saveButton.grid(row=1,column=0)
-#Add New button
+
+# 'Add New' button
 newItemButton=Button(text="New Event")
 newItemButton.bind("<Button-1>",newItem)
 newItemButton.grid(row=0,column=1)
-#Name Entry
+
+# Name entry text field
 itemNameEntry=Entry(root,width=25)
 itemNameEntry.grid(row=3,column=1)
-#Submit Button
+
+# Submit Button
 submitButton=Button(root,width=25,text="Submit")
 submitButton.grid(row=4,column=1)
 submitButton.bind("<Button-1>",submit)
-#Begin loading
+
+# Begin loading
 load()
-#Starting UI
+
+# Start GUI
 root.mainloop()
