@@ -30,7 +30,7 @@ HOST=paramaters[0]
 PORT=paramaters[1]
 
 root=Tk()
-root.title("Sound and Lights Inventory Sy stem")
+root.title("Sound and Lights Inventory System")
 root.minsize(width=700, height=420)
 
 frame = Frame(root)
@@ -111,7 +111,7 @@ itemlist=Treeview(root)
 itemlist.heading("#0", text="Name")
 itemlist["columns"]=("1")
 itemlist.column("1",width=50)
-itemlist.heading("1",text="id")
+itemlist.heading("1",text="Item ID")
 itemlist.bind("<Double-1>", select)
 itemlist.grid(row=2,column=1,padx=10,pady=10)
 #Name tag
