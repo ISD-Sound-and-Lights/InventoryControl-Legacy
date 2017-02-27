@@ -2,7 +2,7 @@
 
 This project is part of a prototype inventory system for the International School of Düsseldorf Sound and Lights Team.
 
-This system uses QR codes for easy identification of the items and has three main parts to it. These are the Desktop Client, Mobile client as well as the serverside client.
+This system uses QR codes for easy identification of the items and has three main parts to it. These are the desktop client, mobile client and server.
 
 * **Desktop Client:** Used to manage the inventory, easily see which items are where as well as add new items into the system.
 
