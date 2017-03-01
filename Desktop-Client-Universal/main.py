@@ -104,6 +104,16 @@ def submit(event):
     items[getItemIndexById(var.selected_id)].name = itemNameEntry.get()
     updateItemList()
 
+def locationWindow(event):
+    locationwindow=Toplevel(root)
+    locationwindow.title("Locations")
+    locationwindow.minsize(width=500,height=300)
+    locationframe=Frame(locationwindow)
+    #Location treeview
+    locationList=Treeview(locationwindow)
+    locationList.heading("#0", text="Name")
+    locationList.column("1",text="id")
+
 
 #Begin UI Initialisation
 #Itemlist
@@ -133,5 +143,10 @@ submitButton.grid(row=4,column=1)
 submitButton.bind("<Button-1>",submit)
 #Begin loading
 load()
+#The options part
+#Locations Button
+locationButton=Button(root, text="Locations")
+locationButton.grid(column=5,row=1)
+locationButton.bind("<Button-1>", locationWindow)
 #Starting UI
 root.mainloop()
