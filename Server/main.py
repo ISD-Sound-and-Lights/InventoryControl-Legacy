@@ -1,6 +1,6 @@
 import socket
 #Load Settings
-settings=open("settings", "r")
+settings=open("settings.conf", "r")
 paramaters=settings.read().split("\n")
 settings.close()
 
