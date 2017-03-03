@@ -10,7 +10,7 @@ This system uses QR codes for easy identification of the items and has three mai
 	* **[iOS client] (../master/Client-iOS):** Written in Swift. Designed for iPhone.
 	* **[Android client] (../master/Client-Android):** Designed for Android phones.
 
-* **[Server] (../master/Server):** In charge of syncing everyhting together and making sure that all clients are up to date.
+* **[Server] (https://github.com/ISD-Sound-and-Lights/Inventory-Server):** In charge of syncing everything together and making sure that all clients are up to date.
 
 **Designers:**
 * [Maximilian am Brunnen] (https://github.com/MaxiaB)
