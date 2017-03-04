@@ -222,7 +222,7 @@ def submit(event):
 def submitLoc(event):
     # print(locationList.item(locationList.selection()))
     print(str(var.loc_selected_id))
-    locations[getLocationIndexById(var.locs_selected_id)].name = locNameEntry.get()
+    locations[getLocationIndexById(var.loc_selected_id)].name = locNameEntry.get()
     updateLocationList()
 
 # Item list
