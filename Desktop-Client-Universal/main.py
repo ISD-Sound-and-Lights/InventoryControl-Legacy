@@ -33,12 +33,12 @@ items = []
 locations = []
 
 # Load Settings
-settings = open("settings.conf", "r")
-paramaters = settings.read().split("\n")
-settings.close()
+#settings = open("settings.conf", "r")
+#paramaters = settings.read().split("\n")
+#settings.close()
 
-HOST = paramaters[0]
-PORT = paramaters[1]
+#HOST = paramaters[0]
+#PORT = paramaters[1]
 
 # Setup tkinter
 root = Tk()
@@ -68,6 +68,15 @@ def savebind(event):
 
 
 def load():
+    try:
+        open("items.csv", "r").close()
+    except FileNotFoundError:
+        open("items.csv", "w").close()
+
+    try:
+        open("locations.csv", "w").close()
+    except FileNotFoundError:
+        open("items.csv","w").close()
     itemfile = open("items.csv", "r")
     rows = itemfile.read().split("\n")
     itemfile.close()
@@ -115,7 +124,7 @@ def load():
             else:
                 valid = True
     print(var.next_free_id)
-
+    
 
 def updateItemList():
     itemlist.delete(*itemlist.get_children())
