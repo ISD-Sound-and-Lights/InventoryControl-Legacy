@@ -2,6 +2,8 @@
 from tkinter import *
 from tkinter.ttk import *
 
+def breaknow(event):
+    print("Breaking")
 
 # Define classes
 class globalvars: #This class exists because im an idiot, PM me to find out more
@@ -43,10 +45,9 @@ locations = []
 # Setup tkinter
 root = Tk()
 root.title("Sound and Lights Inventory System")
-root.minsize(width=850, height=420)
+root.minsize(width=900, height=420)
 
 frame = Frame(root)
-
 
 # Define functions
 def save():
@@ -62,6 +63,7 @@ def save():
     for loc in locations:
         locationfile.write(loc.name+",")
         locationfile.write(str(loc.id) + "\n")
+    locationfile.close()
 
 def savebind(event):
     save()
@@ -74,7 +76,7 @@ def load():
         open("items.csv", "w").close()
 
     try:
-        open("locations.csv", "w").close()
+        open("locations.csv", "r").close()
     except FileNotFoundError:
         open("items.csv","w").close()
     itemfile = open("items.csv", "r")
@@ -123,13 +125,13 @@ def load():
                 addtext = str(trycount)
             else:
                 valid = True
-    print(var.next_free_id)
+    updateItemList()
     
 
 def updateItemList():
     itemlist.delete(*itemlist.get_children())
     for item in items:
-        itemlist.insert("", var.itemCount, text=item.name, values=(item.id))
+        itemlist.insert("", var.itemCount, text=item.name, values=(item.id,locations[getLocationIndexByGlobalId(item.locationid)].name))
 def updateLocationList():
     locationList.delete(*locationList.get_children())
     locationList.delete(*locationList.get_children())
@@ -143,10 +145,10 @@ def newItem(event):
     var.next_free_id += 1
 
 def newLocation(event):
-    var.locationCount+=1
+    var.locationCount += 1
     locations.append(Item("New Location", var.next_free_id,selectid=var.locationCount-1))
     locationList.insert("",var.locationCount,text=locations[var.locationCount-1].name, values=(locations[var.locationCount-1].id))
-    var.next_free_id+=1
+    var.next_free_id += 1
 
 def getItemIndexById(identification):
     ga = 0
@@ -229,17 +231,30 @@ def submit(event):
     updateItemList()
 
 def submitLoc(event):
+    global itemLocationSelect
     # print(locationList.item(locationList.selection()))
     print(str(var.loc_selected_id))
     locations[getLocationIndexById(var.loc_selected_id)].name = locNameEntry.get()
+    itemLocationSelect["menu"].delete(0, 'end')
+    for loc in returnAllLocationNames():
+        itemLocationSelect = OptionMenu(root, itemLocationValue, *(["Location"] + returnAllLocationNames()))
+        itemLocationSelect.grid(column=1, row=4)
+
     updateLocationList()
+def clearItemName(event):
+    if itemNameEntry.get() == "New Item":
+        itemNameEntry.delete(0,"end")
+
+def clearLocName(event):
+    if(locNameEntry.get() == "New Location"):
+        locNameEntry.delete(0,"end")
 
 # Item list
 itemlist = Treeview(root)
 itemlist.heading("#0", text="Item Name")
 itemlist["columns"] = ("1", "2")
 itemlist.column("1", width=50)
-itemlist.heading("1", text="Item ID")
+itemlist.heading("1", text="id")
 itemlist.column("2", width=200)
 itemlist.heading("2", text="Location")
 itemlist.bind("<Double-1>", select)
@@ -261,6 +276,7 @@ newItemButton.grid(row=1, column=1)
 # Name entry text field
 itemNameEntry = Entry(root, width=25)
 itemNameEntry.grid(row=3, column=1)
+itemNameEntry.bind("<Button-1>", clearItemName)
 
 # Submit Button
 submitButton = Button(root, width=25, text="Submit")
@@ -279,6 +295,7 @@ Label(text="Name:").grid(row=3,column=2)
 
 locNameEntry = Entry(root, width=25)
 locNameEntry.grid(row=3, column=3)
+locNameEntry.bind("<Button-1>", clearLocName)
 
 locSubmitButton = Button(width=25,text="Submit")
 locSubmitButton.grid(row=5,column=3)
@@ -287,6 +304,10 @@ locSubmitButton.bind("<Button-1>",submitLoc)
 newLocButton = Button(text="New Location")
 newLocButton.grid(row=1,column=3)
 newLocButton.bind("<Button-1>", newLocation)
+
+breakButton = Button(text="DEBUG BREAK")
+breakButton.grid(row=5,column=0)
+breakButton.bind("<Double-1>", breaknow)
 
 # Begin loading
 load()
