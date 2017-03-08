@@ -1,14 +1,11 @@
 import socket
+
 #Load Settings
 settings=open("settings.conf", "r")
 paramaters=settings.read().split("\n")
 settings.close()
-
-PORT=paramaters[0]
-
-from tkinter import *
-from tkinter.ttk import *
-
+HOST=''
+PORT=int(paramaters[0])
 
 # Define classes
 class globalvars: #This class exists because im an idiot, PM me to find out more
@@ -22,22 +19,27 @@ var = globalvars()
 
 
 class Location:
-    selectid=0
-    def __init__(self, name, id, selectid=0):
+    def __init__(self, name, id):
         self.name = name
         self.id = id
-        self.selectid = selectid
 class Item:
-    selectid=0
     locationid = -1
-    def __init__(self, name, id, selectid=0):
+    def __init__(self, name, id, location):
         self.name = name
         self.id = id
-        self.selectid = selectid
-
+        self.locationid = location
+class Version:
+    def __init__(self, id, itemDiff = "", locationDiff = ""):
+        self.id = id
+        self.itemDiff = itemDiff
+        self.locationDiff = locationDiff
 
 items = []
 locations = []
+versions={}
+
+genItems = []
+genLocations = []
 
 def save():
     print("Saving")
@@ -53,7 +55,16 @@ def save():
         locationfile.write(loc.name+",")
         locationfile.write(str(loc.id) + "\n")
 
+    versionfile = open("versions.csv", "w")
+    for version,mod in versions.items():
+        versionfile.write(version + "," + mod.itemDiff + "," + mod.locationDiff+"\n")
+
 def load():
+    try:
+        open("items.csv", "r").close()
+    except FileNotFoundError:
+        open("items.csv", "w").close()
+
     itemfile = open("items.csv", "r")
     rows = itemfile.read().split("\n")
     itemfile.close()
@@ -62,9 +73,14 @@ def load():
         if not values == ['']:
             var.next_free_id += 1
             var.itemCount += 1
-            items.append(Item(values[0], int(values[1])))
+            items.append(Item(values[0], int(values[1]),values[2]))
             items[var.itemCount - 1].locationid = int(values[2])
             items[var.itemCount - 1].selectid = var.itemCount-1
+
+    try:
+        open("locations.csv", "r").close()
+    except FileNotFoundError:
+        open("locations.csv", "w").close()
 
     locationfile = open("locations.csv", "r")
     rows = locationfile.read().split("\n")
@@ -77,33 +93,100 @@ def load():
             locations.append(Location(values[0],int(values[1])))
             locations[var.locationCount - 1].selectid = var.locationCount - 1
 
-    print(var.next_free_id)
+    try:
+        open("versions.csv").close()
+    except FileNotFoundError:
+        open("versions.csv", "w").close()
+
+    versionfile = open("versions.csv")
+
+    rows = versionfile.read().split("\n")
+    for row in rows:
+        values = row.split(",")
+        if not values == ['']:
+            versions[values[0]]=Version(values[0],itemDiff=values[1], locationDiff=values[2])
+    versionfile.close()
+
+def generateVersionFrom(version):
+    doGenerate = False # This keeps track of weather or not we have reached the version in the iterator
+    for versionID, information in versions.items():
+        if versionID == version:
+            doGenerate = True # We have got to the point where we need to generate, so we set it to true`
+        if doGenerate:
+            itemChanges = information.itemDiff.split(".")
+            for itemChange in itemChanges:
+                if "+" in itemChange:
+                    itemChange = itemChange.strip("+")
+                    itemChange = itemChange.split(";")
+                    genItems.append(Item(itemChange[0],int(itemChange[1]),int(itemChange[2])))
+                elif "-" in itemChange:
+                    itemChange = itemChange.strip("-")
+                    itemChange = itemChange.split(";")
+                    index = getGenItemIndexByGlobalId(int(itemChange[1]))
+                    del genItems[index]
+                elif "=" in itemChange:
+                    itemChange = itemChange.strip("=")
+                    itemChange = itemChange.split(";")
+                    index = getGenItemIndexByGlobalId(itemChange[1])
+                    genItems[index].locationid = itemChange[2]
+                    genItems[index].name = itemChange[0]
+            locationChanges = information.locationDiff.split(".")
+            for locationChange in locationChanges:
+                if "+" in locationChange:
+                    locationChange = locationChange.strip("+")
+                    locationChange = locationChange.split(";")
+                    genLocations.append(Location(locationChange[0], int(locationChange[1])))
+                elif "-" in locationChange:
+                    locationChange = locationChange.strip("-")
+                    locationChange = locationChange.split(";")
+                    index = getGenLocationIndexByGlobalId(int(locationChange[1]))
+                    del genLocations[index]
+def generateVersionTo(version):
+    doGenerate = True # This keeps track of weather or not we have reached the version in the iterator
+    for versionID, information in versions.items():
+        if doGenerate:
+            itemChanges = information.itemDiff.split(".")
+            for itemChange in itemChanges:
+                if "+" in itemChange:
+                    itemChange = itemChange.strip("+")
+                    itemChange = itemChange.split(";")
+                    genItems.append(Item(itemChange[0],int(itemChange[1]),int(itemChange[2])))
+                elif "-" in itemChange:
+                    itemChange = itemChange.strip("-")
+                    itemChange = itemChange.split(";")
+                    index = getGenItemIndexByGlobalId(int(itemChange[1]))
+                    del genItems[index]
+                elif "=" in itemChange:
+                    itemChange = itemChange.strip("=")
+                    itemChange = itemChange.split(";")
+                    index = getGenItemIndexByGlobalId(itemChange[1])
+                    genItems[index].locationid = itemChange[2]
+                    genItems[index].name = itemChange[0]
+
+            locationChanges = information.locationDiff.split(".")
+            for locationChange in locationChanges:
+                if "+" in locationChange:
+                    locationChange = locationChange.strip("+")
+                    locationChange = locationChange.split(";")
+                    genLocations.append(Location(locationChange[0], int(locationChange[1])))
+                elif "-" in locationChange:
+                    locationChange = locationChange.strip("-")
+                    locationChange = locationChange.split(";")
+                    index = getGenLocationIndexByGlobalId(int(locationChange[1]))
+                    del genLocations[index]
+        if versionID == version:
+            doGenerate = False # We have got to the point where we dont want to generate, so we set it to false`
 
 def newItem():
     var.itemCount += 1
-    items.append(Item("New Item", var.next_free_id,selectid=var.itemCount-1))
+    items.append(Item("New Item", var.next_free_id))
     var.next_free_id += 1
 
 def newLocation():
     var.locationCount+=1
-    locations.append(Item("New Location", var.next_free_id,selectid=var.locationCount-1))
+    locations.append(Item("New Location", var.next_free_id))
     var.next_free_id+=1
 
-def getItemIndexById(identification):
-    ga = 0
-    for item in items:
-        if item.selectid == identification:
-            return ga
-        else:
-            ga += 1
-    print("Item not found")
-def getLocationIndexById(identification):
-    ga = 0
-    for loc in locations:
-        if loc.selectid == identification:
-            return ga
-        else:
-            ga += 1
 def getLocationIndexByName(name):
     ga = 0
     for loc in locations:
@@ -127,6 +210,15 @@ def getItemIndexByGlobalId(identification):
             return ga
         else:
             ga += 1
+
+def getGenItemIndexByGlobalId(identification):
+    ga = 0
+    for item in genItems:
+        if item.id == identification:
+            return ga
+        else:
+            ga += 1
+
 def getLocationIndexByGlobalId(identification):
     ga = 0
     for loc in locations:
@@ -134,3 +226,39 @@ def getLocationIndexByGlobalId(identification):
             return ga
         else:
             ga += 1
+def getGenLocationIndexByGlobalId(identification):
+    ga = 0
+    for loc in genLocations:
+        if loc.id == identification:
+            return ga
+        else:
+            ga += 1
+def applyGenToAcual():
+    global items
+    global locations
+    items = genItems
+    locations = genLocations
+
+def currentVersion():
+    return (list(versions.values())[-1:])[0].id
+def generateCurrentVersion():
+    generateVersionTo(currentVersion())
+
+load()
+save()
+
+while False:
+    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    soc.bind((HOST,PORT))
+
+    soc.listen(5)
+    conn,addr = soc.accept()
+
+    print("Connection recieved from " + str(addr))
+    while 1:
+        data = conn.recv(1024)
+        if not data: break
+        print("Data " + repr(data))
+
+    soc.close()
