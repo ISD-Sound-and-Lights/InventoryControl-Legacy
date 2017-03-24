@@ -2,8 +2,14 @@
 from tkinter import *
 from tkinter.ttk import *
 
+import random
+import socket
+import os
+
 def breaknow(event):
     print("Breaking")
+
+currentSyncVersion = "100000"
 
 # Define classes
 class globalvars: #This class exists because im an idiot, PM me to find out more
@@ -30,18 +36,66 @@ class Item:
         self.id = id
         self.selectid = selectid
 
+class Version:
+    def __init__(self, id, itemDiff = "", locationDiff = ""):
+        self.id = id
+        self.itemDiff = itemDiff
+        self.locationDiff = locationDiff
+
+    def changeItemValuesOfId(self,id,nameChange="",locationidChange=-1):
+        itemDiffValue = self.itemDiff.strip("-")
+        itemDiffValue = itemDiffValue.strip("+")
+
+        itemDiffValue = itemDiffValue.split(".")
+        for i in range(0, len(itemDiffValue)):
+            itemDiffValue[i] = itemDiffValue[i].split(";")
+        print(itemDiffValue)
+
+        itemIndex = -12591
+
+        for i in range(0,len(itemDiffValue)):
+            if itemDiffValue[i][1] == id:
+                itemIndex = i
+
+        if itemIndex != -12591:
+            if nameChange != "":
+                itemDiffValue[i][0] = nameChange
+            if locationidChange != -1:
+                itemDiffValue[i][2] = locationidChange
+    def newItem(self,id,name,locid=-1):
+        if self.itemDiff == "":
+            self.itemDiff+="+" + name + ";" + str(id) + ";" + str(locid)
+        else:
+            self.itemDiff += ".+" + name + ";" + str(id) + ";" + str(locid)
+
+    def newLocation(self,id,name):
+        if self.locationDiff == "":
+            self.locationDiff+="+" + name + ";" + str(id())
+        else:
+            self.locationDiff += ".+" + name + ";" + str(id())
 
 items = []
 locations = []
 
+currentVersion = Version(random.randint(int(currentSyncVersion),1000000))
+
 # Load Settings
-#settings = open("settings.conf", "r")
-#paramaters = settings.read().split("\n")
-#settings.close()
+# HOST, PORT
+try:
+    open("settings.conf", "r").close()
+except FileNotFoundError:
+    open("settings.conf", "w").close()
+settings = open("settings.conf", "r")
 
-#HOST = paramaters[0]
-#PORT = paramaters[1]
+values=settings.read().split(",")
+try:
+    HOST = values[0]
+    PORT = int(values[1])
+except IndexError:
+    print("No HOST found in conf file")
+    raise IndexError
 
+settings.close()
 # Setup tkinter
 root = Tk()
 root.title("Sound and Lights Inventory System")
@@ -64,6 +118,10 @@ def save():
         locationfile.write(loc.name+",")
         locationfile.write(str(loc.id) + "\n")
     locationfile.close()
+
+    versionfile = open("versions.csv","w")
+    versionfile.write(str(currentVersion.id)+","+str(currentVersion.itemDiff)+","+str(currentVersion.locationDiff))
+    versionfile.close()
 
 def savebind(event):
     save()
@@ -90,6 +148,8 @@ def load():
             items.append(Item(values[0], int(values[1])))
             items[var.itemCount - 1].locationid = int(values[2])
             items[var.itemCount - 1].selectid = var.itemCount-1
+
+
     for item in items:
         valid = False
         trycount = 0
@@ -126,7 +186,19 @@ def load():
             else:
                 valid = True
     updateItemList()
-    
+
+    try:
+        open("versions.csv").close()
+    except FileNotFoundError:
+        open("versions.csv","w").close()
+    fileText=open("versions.csv").read()
+
+    if fileText !="":
+        fileText = fileText.split(",")
+
+        currentVersion.id = fileText[0]
+        currentVersion.itemDiff = fileText[1]
+        currentVersion.locationDiff = fileText[2]
 
 def updateItemList():
     itemlist.delete(*itemlist.get_children())
@@ -142,6 +214,7 @@ def newItem(event):
     var.itemCount += 1
     items.append(Item("New Item", var.next_free_id,selectid=var.itemCount-1))
     itemlist.insert("", var.itemCount, text=items[var.itemCount - 1].name, values=(items[var.itemCount - 1].id))
+    currentVersion.newItem(var.next_free_id,"New Item")
     var.next_free_id += 1
 
 def newLocation(event):
@@ -199,6 +272,9 @@ def returnAllLocationNames():
 def getLocationIndexByGlobalId(identification):
     ga = 0
     for loc in locations:
+        print("Get Location Index by global id:")
+        print(loc.id)
+        print(identification)
         if loc.id == identification:
             return ga
         else:
@@ -211,9 +287,11 @@ def select(event):
 
     itemNameEntry.delete(0, "end")
     itemNameEntry.insert(0, theItem.name)
-
     itemLocationValue.set(locations[getLocationIndexByGlobalId(theItem.locationid)].name)
-
+#    try:
+#        itemLocationValue.set(locations[getItemIndexByGlobalId(theItem.locationid)].name)
+#    except:
+#        pass
     var.item_selected_id = theItem.selectid
 
 def selectLocation(event):
@@ -227,6 +305,7 @@ def selectLocation(event):
 def submit(event):
     # print(itemlist.item(itemlist.selection()))
     items[getItemIndexById(var.item_selected_id)].name = itemNameEntry.get()
+    currentVersion.changeItemValuesOfId(var.item_selected_id, itemNameEntry.get(),locations[getLocationIndexByName(itemLocationValue.get())].id)
     items[getItemIndexById(var.item_selected_id)].locationid = locations[getLocationIndexByName(itemLocationValue.get())].id
     updateItemList()
 
@@ -248,7 +327,32 @@ def clearItemName(event):
 def clearLocName(event):
     if(locNameEntry.get() == "New Location"):
         locNameEntry.delete(0,"end")
+def deleteItem(event):
+    theItem=getItemIndexById(var.item_selected_id)
+    del items[getItemIndexById(var.item_selected_id)]
+    var.itemCount -= 1
+    currentVersion.itemDiff += "-" +theItem.name + ";" + theItem.id+";" + theItem.locationid + "."
+    updateItemList()
+def deleteLocation(event):
+    theLocation = locations[getLocationIndexById(var.loc_selected_id)]
+    del locations[getLocationIndexById(var.loc_selected_id)]
+    var.locationCount -= 1
+    currentVersion.locationDiff += "-" + theLocation.name + ";" + theLocation.id + "."
+    updateLocationList()
+def sync(event):
+    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    soc.connect((HOST, PORT))
 
+    itemfile = open("items.csv")
+    locationfile = open("locations.csv")
+
+    soc.sendall((currentSyncVersion+ "." + itemfile.read() + "." + locationfile.read()).encode())
+
+    data = soc.recv(1024)
+
+    soc.close()
+
+    print("Recieved" + repr(data))
 # Item list
 itemlist = Treeview(root)
 itemlist.heading("#0", text="Item Name")
@@ -283,6 +387,10 @@ submitButton = Button(root, width=25, text="Submit")
 submitButton.grid(row=5, column=1)
 submitButton.bind("<Button-1>", submit)
 
+itemDeleteButton = Button(root, width=25, text="Delete")
+itemDeleteButton.grid(row=6, column=1)
+itemDeleteButton.bind("<Button-1>", deleteItem)
+
 locationList = Treeview(root)
 locationList["columns"] = ("1")
 itemlist.heading("#0", text="Location Name")
@@ -301,13 +409,17 @@ locSubmitButton = Button(width=25,text="Submit")
 locSubmitButton.grid(row=5,column=3)
 locSubmitButton.bind("<Button-1>",submitLoc)
 
+deleteButton = Button(width=25,text="Delete")
+deleteButton.grid(row=6,column=3)
+deleteButton.bind("<Button-1>",deleteLocation)
+
 newLocButton = Button(text="New Location")
 newLocButton.grid(row=1,column=3)
 newLocButton.bind("<Button-1>", newLocation)
 
-breakButton = Button(text="DEBUG BREAK")
-breakButton.grid(row=5,column=0)
-breakButton.bind("<Double-1>", breaknow)
+syncButton = Button(text="Sync")
+syncButton.grid(row=5,column=0)
+syncButton.bind("<Button-1>", sync)
 
 # Begin loading
 load()
