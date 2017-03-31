@@ -49,12 +49,11 @@ class Version:
         itemDiffValue = itemDiffValue.split(".")
         for i in range(0, len(itemDiffValue)):
             itemDiffValue[i] = itemDiffValue[i].split(";")
-        print(itemDiffValue)
 
         itemIndex = -12591
 
         for i in range(0,len(itemDiffValue)):
-            if itemDiffValue[i][1] == id:
+            if int(itemDiffValue[i][1]) == id:
                 itemIndex = i
 
         if itemIndex != -12591:
@@ -62,6 +61,18 @@ class Version:
                 itemDiffValue[i][0] = nameChange
             if locationidChange != -1:
                 itemDiffValue[i][2] = locationidChange
+        else:
+            print("Error of id " + str(id) + " not found")
+
+        finalItemDiff = ""
+
+        for diffValue in itemDiffValue:
+            finalItemDiff+=str(diffValue[0]) + ";" + str(diffValue[1]) +";" + str(diffValue[2]) + "."
+
+        itemDiffValue = itemDiffValue[:-1]
+        self.itemDiff = itemDiffValue
+
+
     def newItem(self,id,name,locid=-1):
         if self.itemDiff == "":
             self.itemDiff+="+" + name + ";" + str(id) + ";" + str(locid)
@@ -272,16 +283,13 @@ def returnAllLocationNames():
 def getLocationIndexByGlobalId(identification):
     ga = 0
     for loc in locations:
-        print("Get Location Index by global id:")
-        print(loc.id)
-        print(identification)
         if loc.id == identification:
             return ga
         else:
             ga += 1
 
 def select(event):
-    print("Selected Menu Item")
+    #print("Selected Menu Item")
     selected = itemlist.item(itemlist.selection()[0])["values"][0]
     theItem = items[getItemIndexByGlobalId(selected)]
 
@@ -305,7 +313,7 @@ def selectLocation(event):
 def submit(event):
     # print(itemlist.item(itemlist.selection()))
     items[getItemIndexById(var.item_selected_id)].name = itemNameEntry.get()
-    currentVersion.changeItemValuesOfId(var.item_selected_id, itemNameEntry.get(),locations[getLocationIndexByName(itemLocationValue.get())].id)
+    currentVersion.changeItemValuesOfId(items[getItemIndexById(var.item_selected_id)].id, itemNameEntry.get(),locations[getLocationIndexByName(itemLocationValue.get())].id)
     items[getItemIndexById(var.item_selected_id)].locationid = locations[getLocationIndexByName(itemLocationValue.get())].id
     updateItemList()
 
@@ -348,11 +356,11 @@ def sync(event):
 
     soc.sendall((currentSyncVersion+ "." + itemfile.read() + "." + locationfile.read()).encode())
 
-    data = soc.recv(1024)
+    #data = soc.recv(1024)
 
     soc.close()
 
-    print("Recieved" + repr(data))
+    #print("Recieved" + repr(data))
 # Item list
 itemlist = Treeview(root)
 itemlist.heading("#0", text="Item Name")
