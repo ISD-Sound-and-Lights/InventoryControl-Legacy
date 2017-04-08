@@ -4,6 +4,7 @@ from tkinter.ttk import *
 
 import random
 import socket
+import pickle
 import os
 
 def breaknow(event):
@@ -37,53 +38,32 @@ class Item:
         self.selectid = selectid
 
 class Version:
+    finalItem = ""
+    finalLocation = ""
+    finalversion = ""
     def __init__(self, id, itemDiff = "", locationDiff = ""):
         self.id = id
         self.itemDiff = itemDiff
         self.locationDiff = locationDiff
 
-    def changeItemValuesOfId(self,id,nameChange="",locationidChange=-1):
-        itemDiffValue = self.itemDiff.strip("-")
-        itemDiffValue = itemDiffValue.strip("+")
+    def newItem(self,id):
+        self.itemDiff+=str(id)+";"
 
-        itemDiffValue = itemDiffValue.split(".")
-        for i in range(0, len(itemDiffValue)):
-            itemDiffValue[i] = itemDiffValue[i].split(";")
+    def newLocation(self,id):
+        self.locationDiff+=str(id)+";"
+    def finalise(self):
+        itemId = self.itemDiff.split(";")
+        locationid = self.locationDiff.split(";")
 
-        itemIndex = -12591
-
-        for i in range(0,len(itemDiffValue)):
-            if int(itemDiffValue[i][1]) == id:
-                itemIndex = i
-
-        if itemIndex != -12591:
-            if nameChange != "":
-                itemDiffValue[i][0] = nameChange
-            if locationidChange != -1:
-                itemDiffValue[i][2] = locationidChange
-        else:
-            print("Error of id " + str(id) + " not found")
-
-        finalItemDiff = ""
-
-        for diffValue in itemDiffValue:
-            finalItemDiff+=str(diffValue[0]) + ";" + str(diffValue[1]) +";" + str(diffValue[2]) + "."
-
-        itemDiffValue = itemDiffValue[:-1]
-        self.itemDiff = itemDiffValue
-
-
-    def newItem(self,id,name,locid=-1):
-        if self.itemDiff == "":
-            self.itemDiff+="+" + name + ";" + str(id) + ";" + str(locid)
-        else:
-            self.itemDiff += ".+" + name + ";" + str(id) + ";" + str(locid)
-
-    def newLocation(self,id,name):
-        if self.locationDiff == "":
-            self.locationDiff+="+" + name + ";" + str(id())
-        else:
-            self.locationDiff += ".+" + name + ";" + str(id())
+        for item in items:
+            if item.id in itemId:
+                self.finalItem += "+" + item.name + ";" + item.id + ";" + item.locationid+"."
+        for location in locations:
+            if location.id in locationid:
+                self.finalLocation += "+" + location.name+";" + location.id+"."
+        self.finalItem = self.finalItem[:-1]
+        self.finalLocation = self.finalLocation[:-1]
+        self.finalversion = currentSyncVersion+","+self.finalItem +","+ self.finalLocation
 
 items = []
 locations = []
@@ -129,16 +109,14 @@ def save():
         locationfile.write(loc.name+",")
         locationfile.write(str(loc.id) + "\n")
     locationfile.close()
-
-    versionfile = open("versions.csv","w")
-    versionfile.write(str(currentVersion.id)+","+str(currentVersion.itemDiff)+","+str(currentVersion.locationDiff))
-    versionfile.close()
+    pickle.dump(currentVersion,open("version.p","wb"))
 
 def savebind(event):
     save()
 
 
 def load():
+    global currentVersion
     try:
         open("items.csv", "r").close()
     except FileNotFoundError:
@@ -197,20 +175,7 @@ def load():
             else:
                 valid = True
     updateItemList()
-
-    try:
-        open("versions.csv").close()
-    except FileNotFoundError:
-        open("versions.csv","w").close()
-    fileText=open("versions.csv").read()
-
-    if fileText !="":
-        fileText = fileText.split(",")
-
-        currentVersion.id = fileText[0]
-        currentVersion.itemDiff = fileText[1]
-        currentVersion.locationDiff = fileText[2]
-
+    currentVersion = pickle.load(open("version.p","rb"))
 def updateItemList():
     itemlist.delete(*itemlist.get_children())
     for item in items:
@@ -225,13 +190,14 @@ def newItem(event):
     var.itemCount += 1
     items.append(Item("New Item", var.next_free_id,selectid=var.itemCount-1))
     itemlist.insert("", var.itemCount, text=items[var.itemCount - 1].name, values=(items[var.itemCount - 1].id))
-    currentVersion.newItem(var.next_free_id,"New Item")
+    currentVersion.newItem(var.next_free_id)
     var.next_free_id += 1
 
 def newLocation(event):
     var.locationCount += 1
     locations.append(Item("New Location", var.next_free_id,selectid=var.locationCount-1))
     locationList.insert("",var.locationCount,text=locations[var.locationCount-1].name, values=(locations[var.locationCount-1].id))
+    currentVersion.newLocation(var.next_free_id)
     var.next_free_id += 1
 
 def getItemIndexById(identification):
@@ -313,7 +279,6 @@ def selectLocation(event):
 def submit(event):
     # print(itemlist.item(itemlist.selection()))
     items[getItemIndexById(var.item_selected_id)].name = itemNameEntry.get()
-    currentVersion.changeItemValuesOfId(items[getItemIndexById(var.item_selected_id)].id, itemNameEntry.get(),locations[getLocationIndexByName(itemLocationValue.get())].id)
     items[getItemIndexById(var.item_selected_id)].locationid = locations[getLocationIndexByName(itemLocationValue.get())].id
     updateItemList()
 
@@ -351,12 +316,15 @@ def sync(event):
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     soc.connect((HOST, PORT))
 
-    itemfile = open("items.csv")
-    locationfile = open("locations.csv")
+    currentVersion.finalise()
+    soc.sendall((currentVersion.finalversion).encode())
+    finaldata=""
+    while True:
+        data = soc.recv(1024)
+        if not data: break
+        finaldata+=repr(data)
 
-    soc.sendall((currentSyncVersion+ "." + itemfile.read() + "." + locationfile.read()).encode())
-
-    #data = soc.recv(1024)
+    finaldata=pickle.loads(finaldata)
 
     soc.close()
 

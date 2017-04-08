@@ -1,5 +1,5 @@
 import socket
-
+import pickle
 #Load Settings
 settings=open("settings.conf", "r")
 paramaters=settings.read().split("\n")
@@ -247,7 +247,7 @@ def generateCurrentVersion():
 load()
 save()
 
-while False:
+while True:
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     soc.bind((HOST,PORT))
@@ -256,9 +256,17 @@ while False:
     conn,addr = soc.accept()
 
     print("Connection recieved from " + str(addr))
+    recievedData = ""
     while 1:
         data = conn.recv(1024)
         if not data: break
         print("Data " + repr(data))
+        recievedData+=repr(data)
+    recievedData = recievedData.split(",")
+    versions[recievedData[0]] = Version(recievedData[0],recievedData[1],recievedData[2])
 
+    generateCurrentVersion()
+    applyGenToAcual()
+
+    soc.send([pickle.dumps(items), pickle.dumps(locations),currentVersion()])
     soc.close()
