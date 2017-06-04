@@ -82,8 +82,13 @@ class Version:
 
 items = []
 locations = []
-
-currentVersion = Version(random.randint(int(currentSyncVersion),1000000))
+hasNewVersion=False
+def getNewVersion():
+    global  hasNewVersion
+    if(not hasNewVersion):
+        hasNewVersion = True;
+        global  currentSyncVersion
+        currentSyncVersion = str(int(currentSyncVersion) + 1)
 
 # Setup tkinter
 root = Tk()
@@ -217,6 +222,7 @@ def updateLocationList():
 
 def newItem(event):
     var.itemCount += 1
+    getNewVersion()
     items.append(Item("New Item", var.next_free_item_id,selectid=var.itemCount-1))
     itemlist.insert("", var.itemCount, text=items[var.itemCount - 1].name, values=(items[var.itemCount - 1].id))
     currentVersion.newItem(var.next_free_item_id)
@@ -224,6 +230,7 @@ def newItem(event):
 
 def newLocation(event):
     var.locationCount += 1
+    getNewVersion()
     locations.append(Item("New Location", var.next_free_location_id,selectid=var.locationCount-1))
     locationList.insert("",var.locationCount,text=locations[var.locationCount-1].name, values=(locations[var.locationCount-1].id))
     currentVersion.newLocation(var.next_free_location_id)
@@ -394,23 +401,18 @@ def sync(event):
     else:
         soc.send("None".encode())
     finaldata=""
-    soc.listen()
-    conn,addr=soc.accept()
-    while True:
-        data = conn.recv(1024)
-        if not data: break
-        finaldata+=repr(data)
-    print("Recieved" + finaldata)
-    finaldata=finaldata[1:-1]
-    finaldata=pickle.loads(finaldata) #[items,locations,syncversion]
+    data = soc.recv(1024)
+    finaldata+=repr(data)
+    finaldata=finaldata[2:-1]
+    print("Recieved " + finaldata)
 
     global currentSyncVersion
     global items
     global locations
     currentVersion.clear()
-    items = finaldata[0]
-    locations = finaldata[1]
-    currentSyncVersion = finaldata[2]
+    #items = finaldata[0]
+    #locations = finaldata[1]
+    #currentSyncVersion = finaldata[2]
 
     updateItemList()
     updateLocationList()

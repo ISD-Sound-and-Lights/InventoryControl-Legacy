@@ -245,18 +245,20 @@ def currentVersion():
     return (list(versions.values())[-1:])[0].id
 def generateCurrentVersion():
     generateVersionTo(currentVersion())
-
+def getConentsOfItemFile():
+    return open("items.csv").read()
+def getContentsOfLocationFile():
+    return open("items.csv").read()
 load()
 save()
 
-
+try:
+    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    soc.bind((HOST, PORT))
+except OSError:
+    print("OSError, maybe program is already running?")
+    raise
 while True:
-    try:
-        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        soc.bind((HOST, PORT))
-    except OSError:
-        print("OSError, maybe program is already running?")
-        raise
 
     soc.listen()
     conn,addr = soc.accept()
@@ -265,13 +267,13 @@ while True:
     data = conn.recv(1024)
     if not data: break
     recievedData=repr(data)
-    recievedData = recievedData[1:-1]
+    recievedData = recievedData[2:-1]
     print("Recieved " + recievedData)
     if not recievedData == "None":
         recievedData = recievedData.split(",")
         versions[recievedData[0]] = Version(recievedData[0],recievedData[1],recievedData[2])
     generateCurrentVersion()
     applyGenToAcual()
-    print("Sending " + str(pickle.dumps([items, locations,currentVersion()])))
-    conn.sendall(str(pickle.dumps([items, locations, currentVersion()])).encode())
     save()
+    print("Sending " + repr(getConentsOfItemFile() + ">" + getContentsOfLocationFile() + ">" + currentVersion()))
+    conn.sendall((getConentsOfItemFile() + ">" + getContentsOfLocationFile() + ">" + currentVersion()).encode())
