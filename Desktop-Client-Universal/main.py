@@ -368,7 +368,7 @@ def submitSettings(host,port):
     settingsFile.close()
     loadSettings()
 
-def openSettingsWindow(event):
+def openSettingsWindow(event=0):
     toplevel = Toplevel()
 
     hostLabel = Label(toplevel, text="Host:")
@@ -498,5 +498,6 @@ itemLocationValue.set("None")
 itemLocationSelect = OptionMenu(root, itemLocationValue, *(["Location"] + returnAllLocationNames()))
 itemLocationSelect.grid(column=1,row=4)
 
+root.after(1000,func=openSettingsWindow)
 # Start GUI
 root.mainloop()
