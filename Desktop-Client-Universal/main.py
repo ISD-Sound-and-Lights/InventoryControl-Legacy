@@ -5,7 +5,7 @@ from tkinter.ttk import *
 import random
 import socket
 import pickle
-import os
+
 
 def breaknow(event):
     print("Breaking")
@@ -16,12 +16,12 @@ currentSyncVersion = "100000"
 class globalvars: #This class exists because im an idiot, PM me to find out more
     itemCount = 0
     locationCount = 0
-    next_free_id = 1
+    next_free_item_id = 0
+    next_free_location_id = 0
     item_selected_id = 0
     loc_selected_id = 0
 
 var = globalvars()
-
 
 class Location:
     selectid=0
@@ -46,21 +46,36 @@ class Version:
         self.itemDiff = itemDiff
         self.locationDiff = locationDiff
 
+    def clear(self):
+        self.finalversion = ""
+        self.finalLocation = ""
+        self.finalItem = ""
+        self.itemDiff = ""
+        self.locationDiff = ""
+
     def newItem(self,id):
         self.itemDiff+=str(id)+";"
 
     def newLocation(self,id):
         self.locationDiff+=str(id)+";"
+
+    def setItems(self, itemDiff):
+        self.itemDiff = itemDiff
+    def setLocation(self, locationDiff):
+        self.locationDiff = locationDiff
     def finalise(self):
         itemId = self.itemDiff.split(";")
         locationid = self.locationDiff.split(";")
 
+        itemId = list(map(int,itemId[:-1]))
+        locationid = list(map(int,locationid[:-1]))
+
         for item in items:
             if item.id in itemId:
-                self.finalItem += "+" + item.name + ";" + item.id + ";" + item.locationid+"."
+                self.finalItem += "+" + item.name + ";" + str(item.id) + ";" + str(item.locationid)+"."
         for location in locations:
             if location.id in locationid:
-                self.finalLocation += "+" + location.name+";" + location.id+"."
+                self.finalLocation += "+" + location.name+";" + str(location.id)+"."
         self.finalItem = self.finalItem[:-1]
         self.finalLocation = self.finalLocation[:-1]
         self.finalversion = currentSyncVersion+","+self.finalItem +","+ self.finalLocation
@@ -70,23 +85,6 @@ locations = []
 
 currentVersion = Version(random.randint(int(currentSyncVersion),1000000))
 
-# Load Settings
-# HOST, PORT
-try:
-    open("settings.conf", "r").close()
-except FileNotFoundError:
-    open("settings.conf", "w").close()
-settings = open("settings.conf", "r")
-
-values=settings.read().split(",")
-try:
-    HOST = values[0]
-    PORT = int(values[1])
-except IndexError:
-    print("No HOST found in conf file")
-    raise IndexError
-
-settings.close()
 # Setup tkinter
 root = Tk()
 root.title("Sound and Lights Inventory System")
@@ -95,6 +93,29 @@ root.minsize(width=900, height=420)
 frame = Frame(root)
 
 # Define functions
+def loadSettings():
+    global HOST
+    global PORT
+    try:
+        open("settings.conf", "r").close()
+    except FileNotFoundError:
+        open("settings.conf", "w").close()
+    settings = open("settings.conf", "r")
+
+    values=settings.read().split(",")
+    try:
+        HOST = values[0]
+        PORT = int(values[1])
+    except IndexError:
+        print("No HOST found in conf file")
+        raise IndexError
+
+    settings.close()
+
+# Load Settings
+# HOST, PORT
+loadSettings()
+
 def save():
     print("Saving")
     itemfile = open("items.csv", "w")
@@ -132,7 +153,7 @@ def load():
     for row in rows:
         values = row.split(",")
         if not values == ['']:
-            var.next_free_id += 1
+            var.next_free_item_id+= 1
             var.itemCount += 1
             items.append(Item(values[0], int(values[1])))
             items[var.itemCount - 1].locationid = int(values[2])
@@ -158,7 +179,7 @@ def load():
     for row in rows:
         values = row.split(",")
         if not values == ['']:
-            var.next_free_id += 1
+            var.next_free_location_id += 1
             var.locationCount += 1
             locations.append(Location(values[0],int(values[1])))
             locations[var.locationCount - 1].selectid = var.locationCount - 1
@@ -175,30 +196,38 @@ def load():
             else:
                 valid = True
     updateItemList()
-    currentVersion = pickle.load(open("version.p","rb"))
+    try:
+        currentVersion = pickle.load(open("version.p","rb"))
+    except FileNotFoundError:
+        pass
+
 def updateItemList():
     itemlist.delete(*itemlist.get_children())
     for item in items:
-        itemlist.insert("", var.itemCount, text=item.name, values=(item.id,locations[getLocationIndexByGlobalId(item.locationid)].name))
+        i = var.itemCount
+        locationIndex = getLocationIndexByGlobalId(item.locationid)
+        #print(locationIndex)
+        if type(locationIndex) != int:
+            locationIndex = var.locationCount
+        itemlist.insert("", i, text=item.name, values=(item.id,locations[locationIndex].name))
 def updateLocationList():
-    locationList.delete(*locationList.get_children())
     locationList.delete(*locationList.get_children())
     for location in locations:
         locationList.insert("", var.locationCount,text=location.name,values=(location.id))
 
 def newItem(event):
     var.itemCount += 1
-    items.append(Item("New Item", var.next_free_id,selectid=var.itemCount-1))
+    items.append(Item("New Item", var.next_free_item_id,selectid=var.itemCount-1))
     itemlist.insert("", var.itemCount, text=items[var.itemCount - 1].name, values=(items[var.itemCount - 1].id))
-    currentVersion.newItem(var.next_free_id)
-    var.next_free_id += 1
+    currentVersion.newItem(var.next_free_item_id)
+    var.next_free_item_id += 1
 
 def newLocation(event):
     var.locationCount += 1
-    locations.append(Item("New Location", var.next_free_id,selectid=var.locationCount-1))
+    locations.append(Item("New Location", var.next_free_location_id,selectid=var.locationCount-1))
     locationList.insert("",var.locationCount,text=locations[var.locationCount-1].name, values=(locations[var.locationCount-1].id))
-    currentVersion.newLocation(var.next_free_id)
-    var.next_free_id += 1
+    currentVersion.newLocation(var.next_free_location_id)
+    var.next_free_location_id += 1
 
 def getItemIndexById(identification):
     ga = 0
@@ -249,9 +278,10 @@ def returnAllLocationNames():
 def getLocationIndexByGlobalId(identification):
     ga = 0
     for loc in locations:
-        if loc.id == identification:
+        if int(loc.id) == int(identification):
             return ga
         else:
+            print(str(loc.id) + " " + str(identification))
             ga += 1
 
 def select(event):
@@ -261,7 +291,10 @@ def select(event):
 
     itemNameEntry.delete(0, "end")
     itemNameEntry.insert(0, theItem.name)
-    itemLocationValue.set(locations[getLocationIndexByGlobalId(theItem.locationid)].name)
+    try:
+        itemLocationValue.set(locations[getLocationIndexByGlobalId(theItem.locationid)].name)
+    except TypeError:
+        pass
 #    try:
 #        itemLocationValue.set(locations[getItemIndexByGlobalId(theItem.locationid)].name)
 #    except:
@@ -279,13 +312,18 @@ def selectLocation(event):
 def submit(event):
     # print(itemlist.item(itemlist.selection()))
     items[getItemIndexById(var.item_selected_id)].name = itemNameEntry.get()
-    items[getItemIndexById(var.item_selected_id)].locationid = locations[getLocationIndexByName(itemLocationValue.get())].id
+    try:
+        items[getItemIndexById(var.item_selected_id)].locationid = locations[getLocationIndexByName(itemLocationValue.get())].id
+    except TypeError:
+        print("User did not submit location!")
+        createPopUpWithText("Please choose a location")
+    #print(itemLocationValue.get())
     updateItemList()
 
 def submitLoc(event):
     global itemLocationSelect
     # print(locationList.item(locationList.selection()))
-    print(str(var.loc_selected_id))
+    #print(str(var.loc_selected_id))
     locations[getLocationIndexById(var.loc_selected_id)].name = locNameEntry.get()
     itemLocationSelect["menu"].delete(0, 'end')
     for loc in returnAllLocationNames():
@@ -293,6 +331,10 @@ def submitLoc(event):
         itemLocationSelect.grid(column=1, row=4)
 
     updateLocationList()
+def createPopUpWithText(text):
+    toplevel = Toplevel()
+    label1 = Label(toplevel, text=text)
+    label1.pack()
 def clearItemName(event):
     if itemNameEntry.get() == "New Item":
         itemNameEntry.delete(0,"end")
@@ -312,23 +354,67 @@ def deleteLocation(event):
     var.locationCount -= 1
     currentVersion.locationDiff += "-" + theLocation.name + ";" + theLocation.id + "."
     updateLocationList()
+
+def submitSettings(host,port):
+    settingsFile = open("settings.conf","w")
+    settingsFile.write(host+","+port)
+    settingsFile.close()
+    loadSettings()
+
+def openSettingsWindow(event):
+    toplevel = Toplevel()
+
+    hostLabel = Label(toplevel, text="Host:")
+    hostLabel.grid(row=0,column=0)
+
+    hostField = Entry(toplevel)
+    hostField.insert(END, HOST)
+    hostField.grid(row=0,column=1)
+
+    portLabel = Label(toplevel,text="Port:")
+    portLabel.grid(row=1,column=0)
+
+    portField = Entry(toplevel)
+    portField.insert(END,PORT)
+    portField.grid(row=1,column=1)
+
+    subButton = Button(toplevel,text="Submit")
+    subButton.grid(row=2,column=0)
+    subButton.bind("<Button-1>",lambda event: submitSettings(hostField.get(),portField.get()))
+
+
 def sync(event):
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     soc.connect((HOST, PORT))
 
-    currentVersion.finalise()
-    soc.sendall((currentVersion.finalversion).encode())
+    if not currentVersion.itemDiff == "" and not currentVersion.locationDiff == "":
+        currentVersion.finalise()
+        print("Sending " + currentVersion.finalversion)
+        soc.sendall(currentVersion.finalversion.encode())
+    else:
+        soc.send("None".encode())
     finaldata=""
+    soc.listen()
+    conn,addr=soc.accept()
     while True:
-        data = soc.recv(1024)
+        data = conn.recv(1024)
         if not data: break
         finaldata+=repr(data)
+    print("Recieved" + finaldata)
+    finaldata=finaldata[1:-1]
+    finaldata=pickle.loads(finaldata) #[items,locations,syncversion]
 
-    finaldata=pickle.loads(finaldata)
+    global currentSyncVersion
+    global items
+    global locations
+    currentVersion.clear()
+    items = finaldata[0]
+    locations = finaldata[1]
+    currentSyncVersion = finaldata[2]
 
-    soc.close()
+    updateItemList()
+    updateLocationList()
 
-    #print("Recieved" + repr(data))
 # Item list
 itemlist = Treeview(root)
 itemlist.heading("#0", text="Item Name")
@@ -397,6 +483,9 @@ syncButton = Button(text="Sync")
 syncButton.grid(row=5,column=0)
 syncButton.bind("<Button-1>", sync)
 
+settingsButton = Button(text="Settings")
+settingsButton.grid(row=6,column=0)
+settingsButton.bind("<Button-1>",openSettingsWindow)
 # Begin loading
 load()
 

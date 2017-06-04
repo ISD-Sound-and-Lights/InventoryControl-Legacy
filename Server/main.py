@@ -11,7 +11,8 @@ PORT=int(paramaters[0])
 class globalvars: #This class exists because im an idiot, PM me to find out more
     itemCount = 0
     locationCount = 0
-    next_free_id = 1
+    next_free_item_id = 0
+    next_free_location_id = 0
     item_selected_id = 0
     loc_selected_id = 0
 
@@ -71,7 +72,7 @@ def load():
     for row in rows:
         values = row.split(",")
         if not values == ['']:
-            var.next_free_id += 1
+            var.next_free_item_id += 1
             var.itemCount += 1
             items.append(Item(values[0], int(values[1]),values[2]))
             items[var.itemCount - 1].locationid = int(values[2])
@@ -88,7 +89,8 @@ def load():
     for row in rows:
         values = row.split(",")
         if not values == ['']:
-            var.next_free_id += 1
+            var.next_free_location_id\
+                += 1
             var.locationCount += 1
             locations.append(Location(values[0],int(values[1])))
             locations[var.locationCount - 1].selectid = var.locationCount - 1
@@ -179,13 +181,13 @@ def generateVersionTo(version):
 
 def newItem():
     var.itemCount += 1
-    items.append(Item("New Item", var.next_free_id))
-    var.next_free_id += 1
+    items.append(Item("New Item", var.next_free_item_id))
+    var.next_free_item_id += 1
 
 def newLocation():
-    var.locationCount+=1
-    locations.append(Item("New Location", var.next_free_id))
-    var.next_free_id+=1
+    var.locationCount += 1
+    locations.append(Location("New Location", var.next_free_location_id))
+    var.next_free_location_id += 1
 
 def getLocationIndexByName(name):
     ga = 0
@@ -247,26 +249,29 @@ def generateCurrentVersion():
 load()
 save()
 
+
 while True:
-    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soc.bind((HOST, PORT))
+    except OSError:
+        print("OSError, maybe program is already running?")
+        raise
 
-    soc.bind((HOST,PORT))
-
-    soc.listen(5)
+    soc.listen()
     conn,addr = soc.accept()
 
     print("Connection recieved from " + str(addr))
-    recievedData = ""
-    while 1:
-        data = conn.recv(1024)
-        if not data: break
-        print("Data " + repr(data))
-        recievedData+=repr(data)
-    recievedData = recievedData.split(",")
-    versions[recievedData[0]] = Version(recievedData[0],recievedData[1],recievedData[2])
-
+    data = conn.recv(1024)
+    if not data: break
+    recievedData=repr(data)
+    recievedData = recievedData[1:-1]
+    print("Recieved " + recievedData)
+    if not recievedData == "None":
+        recievedData = recievedData.split(",")
+        versions[recievedData[0]] = Version(recievedData[0],recievedData[1],recievedData[2])
     generateCurrentVersion()
     applyGenToAcual()
-
-    soc.send([pickle.dumps(items), pickle.dumps(locations),currentVersion()])
-    soc.close()
+    print("Sending " + str(pickle.dumps([items, locations,currentVersion()])))
+    conn.sendall(str(pickle.dumps([items, locations, currentVersion()])).encode())
+    save()
