@@ -1,5 +1,7 @@
 import socket
 import pickle
+import threading
+
 #Load Settings
 settings=open("settings.conf", "r")
 paramaters=settings.read().split("\n")
@@ -110,6 +112,7 @@ def load():
     versionfile.close()
 
 def generateVersionFrom(version):
+    genLocations.clear()
     doGenerate = False # This keeps track of weather or not we have reached the version in the iterator
     for versionID, information in versions.items():
         if versionID == version:
@@ -144,6 +147,7 @@ def generateVersionFrom(version):
                     index = getGenLocationIndexByGlobalId(int(locationChange[1]))
                     del genLocations[index]
 def generateVersionTo(version):
+    genLocations.clear()
     doGenerate = True # This keeps track of weather or not we have reached the version in the iterator
     for versionID, information in versions.items():
         if doGenerate:
@@ -252,28 +256,27 @@ def getContentsOfLocationFile():
 load()
 save()
 
-try:
-    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    soc.bind((HOST, PORT))
-except OSError:
-    print("OSError, maybe program is already running?")
-    raise
-while True:
+soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+soc.bind((HOST, PORT))
+def recieveInformation():
+    while True:
 
-    soc.listen()
-    conn,addr = soc.accept()
+        soc.listen()
+        conn, addr = soc.accept()
 
-    print("Connection recieved from " + str(addr))
-    data = conn.recv(1024)
-    if not data: break
-    recievedData=repr(data)
-    recievedData = recievedData[2:-1]
-    print("Recieved " + recievedData)
-    if not recievedData == "None":
-        recievedData = recievedData.split(",")
-        versions[recievedData[0]] = Version(recievedData[0],recievedData[1],recievedData[2])
-    generateCurrentVersion()
-    applyGenToAcual()
-    save()
-    print("Sending " + repr(getConentsOfItemFile() + ">" + getContentsOfLocationFile() + ">" + currentVersion()))
-    conn.sendall((getConentsOfItemFile() + ">" + getContentsOfLocationFile() + ">" + currentVersion()).encode())
+        print("Connection recieved from " + str(addr))
+        data = conn.recv(1024)
+        if not data: break
+        recievedData = repr(data)
+        recievedData = recievedData[2:-1]
+        print("Recieved " + recievedData)
+        if not recievedData == "None":
+            recievedData = recievedData.split(",")
+            versions[recievedData[0]] = Version(recievedData[0], recievedData[1], recievedData[2])
+        generateCurrentVersion()
+        applyGenToAcual()
+        save()
+        print("Sending " + repr(getConentsOfItemFile() + ">" + getContentsOfLocationFile() + ">" + currentVersion()))
+        conn.sendall((getConentsOfItemFile().replace("\n",";") + ">" + getContentsOfLocationFile().replace("\n",";") + ">" + currentVersion()).encode())
+
+recieveInformation()

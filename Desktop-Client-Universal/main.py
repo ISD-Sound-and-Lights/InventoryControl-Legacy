@@ -177,7 +177,10 @@ def load():
                 addtext = str(trycount)
             else:
                 valid = True
-
+    try:
+        open("locations.csv","r").close()
+    except FileNotFoundError:
+        open("locations.csv","w").close()
     locationfile = open("locations.csv", "r")
     rows = locationfile.read().split("\n")
     locationfile.close()
@@ -205,7 +208,8 @@ def load():
         currentVersion = pickle.load(open("version.p","rb"))
     except FileNotFoundError:
         pass
-
+    except pickle.UnpicklingError:
+        currentVersion=Version(0)
 def updateItemList():
     itemlist.delete(*itemlist.get_children())
     for item in items:
@@ -405,15 +409,28 @@ def sync(event):
     finaldata+=repr(data)
     finaldata=finaldata[2:-1]
     print("Recieved " + finaldata)
-
+    #finaldata = finaldata.replace(repr("\n"),"\n")
     elements = finaldata.split(">")
 
     global currentSyncVersion
     global items
     global locations
+    itemElements = elements[0].split(";")[:-1]
+    locationElements = elements[1].split(";")[:-1]
 
-    open("items.csv", "w").write(elements[0])
-    open("locations.csv","w").write(elements[1])
+    itemfile = open("items.csv", "w")
+    locationfile = open("locations.csv","w")
+
+    for element in itemElements:
+        itemfile.write(element)
+        itemfile.write("\n")
+
+    for element in locationElements:
+        locationfile.write(element)
+        locationfile.write("\n")
+
+    itemfile.close()
+    locationfile.close()
     currentSyncVersion = elements[2]
 
     currentVersion.clear()
