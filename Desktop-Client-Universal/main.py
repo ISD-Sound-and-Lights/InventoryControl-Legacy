@@ -406,14 +406,19 @@ def sync(event):
     finaldata=finaldata[2:-1]
     print("Recieved " + finaldata)
 
+    elements = finaldata.split(">")
+
     global currentSyncVersion
     global items
     global locations
-    currentVersion.clear()
-    #items = finaldata[0]
-    #locations = finaldata[1]
-    #currentSyncVersion = finaldata[2]
 
+    open("items.csv", "w").write(elements[0])
+    open("locations.csv","w").write(elements[1])
+    currentSyncVersion = elements[2]
+
+    currentVersion.clear()
+
+    load()
     updateItemList()
     updateLocationList()
 

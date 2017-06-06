@@ -248,7 +248,7 @@ def generateCurrentVersion():
 def getConentsOfItemFile():
     return open("items.csv").read()
 def getContentsOfLocationFile():
-    return open("items.csv").read()
+    return open("locations.csv").read()
 load()
 save()
 
