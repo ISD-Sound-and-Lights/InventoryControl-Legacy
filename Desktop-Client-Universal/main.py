@@ -104,7 +104,9 @@ def loadSettings():
     try:
         open("settings.conf", "r").close()
     except FileNotFoundError:
-        open("settings.conf", "w").close()
+        w = open("settings.conf", "w")
+        w.write("192.168.2.1,9999")
+        w.close()
     settings = open("settings.conf", "r")
 
     values=settings.read().split(",")
