@@ -2,6 +2,11 @@ import socket
 import pickle
 import threading
 
+try:
+    open("settings.conf", "r").close()
+except FileNotFoundError:
+    open("settings.conf", "w").close()
+
 #Load Settings
 settings=open("settings.conf", "r")
 paramaters=settings.read().split("\n")
