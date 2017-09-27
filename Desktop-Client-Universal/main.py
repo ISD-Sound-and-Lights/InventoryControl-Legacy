@@ -83,6 +83,8 @@ class Version:
 items = []
 locations = []
 hasNewVersion=False
+currentVersion = Version(currentSyncVersion)
+
 def getNewVersion():
     global  hasNewVersion
     if(not hasNewVersion):
